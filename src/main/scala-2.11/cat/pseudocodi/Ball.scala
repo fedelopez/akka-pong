@@ -10,3 +10,5 @@ class Ball extends Actor {
   override def receive: Receive = ???
 
 }
+
+case class Player(name: String, x: Integer, y: Integer)

@@ -2,7 +2,6 @@ package cat.pseudocodi
 
 import java.awt.Color
 import javax.swing.BorderFactory
-import java.awt.event._
 
 import akka.actor.{Actor, ActorRef, Props}
 
@@ -21,6 +20,7 @@ class Scene extends Actor {
 
   override def receive: Receive = {
     case Messages.ShowScene => showScene(sender())
+    case Messages.RedrawScene => println("Redraw")
   }
 
   def showScene(sender: ActorRef) = {
@@ -30,16 +30,16 @@ class Scene extends Actor {
 
       def startBtn = new Button {
         action = Action("Start") {
-          sender ! Messages.SceneReady
+          sender ! Messages.GameStarted
         }
       }
 
       def gamePane = new Panel {
         override def paintComponent(g: Graphics2D) {
           g.setColor(Color.BLACK)
-          g.fillRect(0, size.height / 2 - 25, 12, 100)
-          g.fillRect(size.width - 12, size.height / 2 - 25, 12, 100)
-          g.fillRect(size.width / 2 - 4, size.height / 2 - 4, 8, 8)
+          g.fillRect(0, size.height / 2 - 25, 12, 100) //player 1
+          g.fillRect(size.width - 12, size.height / 2 - 25, 12, 100) //player 2
+          g.fillRect(size.width / 2 - 4, size.height / 2 - 4, 8, 8) //ball
         }
       }
 
@@ -50,7 +50,10 @@ class Scene extends Actor {
         focusable = true
         listenTo(keys)
         reactions += {
-          case e: KeyPressed => println(e.key)
+          case KeyPressed(_, Key.W, _, _) => println("Move Player 1 UP")
+          case KeyPressed(_, Key.S, _, _) => println("Move Player 1 DOWN")
+          case KeyPressed(_, Key.O, _, _) => println("Move Player 2 UP")
+          case KeyPressed(_, Key.K, _, _) => println("Move Player 2 DOWN")
         }
       }
 

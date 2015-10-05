@@ -6,7 +6,9 @@ package cat.pseudocodi
 object Messages {
 
   case object ShowScene
-  case object SceneReady
 
+  case object RedrawScene
+
+  case object GameStarted
 
 }
