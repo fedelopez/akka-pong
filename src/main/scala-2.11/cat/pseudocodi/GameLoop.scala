@@ -5,18 +5,23 @@ import akka.actor.{Actor, Props}
 import scala.concurrent.duration._
 
 /**
- * @author FedericoL
+ * @author Fede
  */
+object GameLoop {
+
+  case object GameStarted
+
+}
 class GameLoop extends Actor {
 
   import context.dispatcher
 
   val scene = context.actorOf(Props[Scene])
 
-  scene ! Messages.ShowScene
+  scene ! Scene.ShowScene
 
   override def receive: Receive = {
-    case Messages.GameStarted => context.system.scheduler.schedule(Duration.Zero, 200.milliseconds, scene, Messages.RedrawScene)
+    case GameLoop.GameStarted => context.system.scheduler.schedule(Duration.Zero, 200.millis, scene, Scene.RedrawScene)
   }
 
 }

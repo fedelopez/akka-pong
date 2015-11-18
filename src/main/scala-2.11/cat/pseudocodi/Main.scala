@@ -1,7 +1,7 @@
 package cat.pseudocodi
 
 /**
- * @author FedericoL
+ * @author Fede
  */
 object Main {
 
