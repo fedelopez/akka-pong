@@ -11,8 +11,8 @@ import scala.swing._
 import scala.swing.event._
 
 /**
- * @author Fede
- */
+  * @author Fede
+  */
 object Scene {
 
   case object ShowScene
@@ -24,6 +24,9 @@ object Scene {
 class Scene extends Actor {
 
   var mainPane: Panel = null
+  val paddleWidth = 12
+  val paddleHeight = 100
+  val ballSquare = 8
 
   override def receive: Receive = {
     case ShowScene => showScene(sender())
@@ -37,32 +40,31 @@ class Scene extends Actor {
     var gameStarted = false
 
     new MainFrame {
-      title = "PONG: Back to 1972"
+
+      val gamePane = new Panel {
+        override def paintComponent(g: Graphics2D) {
+          g.setColor(Color.BLACK)
+          if (gameStarted) {
+            g.fillRect(player1Pos.x, player1Pos.y, paddleWidth, paddleHeight)
+            g.fillRect(player2Pos.x, player2Pos.y, paddleWidth, paddleHeight)
+            g.fillRect(ballPos.x, ballPos.y, ballSquare, ballSquare)
+          } else {
+            g.fillRect(0, size.height / 2 - (paddleHeight / 2), paddleWidth, paddleHeight)
+            g.fillRect(size.width - paddleWidth, size.height / 2 - (paddleHeight / 2), paddleWidth, paddleHeight)
+            g.fillRect(size.width / 2 - (ballSquare / 2), size.height / 2 - (ballSquare / 2), ballSquare, ballSquare)
+          }
+        }
+      }
 
       def startBtn = new Button {
         action = Action("Start") {
           gameStarted = true
           mainPane.requestFocus()
           mainPane.requestFocusInWindow()
-          player1Pos = new PlayerPosition(mainPane.size.height / 2 - 50)
-          player2Pos = new PlayerPosition(mainPane.size.height / 2 - 50)
-          ballPos = new Position(size.width / 2 - 4, mainPane.size.height / 2 - 4)
+          player1Pos = new PlayerPosition(0, gamePane.size.height / 2 - (paddleHeight / 2))
+          player2Pos = new PlayerPosition(gamePane.size.width - paddleWidth, gamePane.size.height / 2 - (paddleHeight / 2))
+          ballPos = new Position(size.width / 2 - (ballSquare / 2), gamePane.size.height / 2 - (ballSquare / 2))
           sender ! GameLoop.GameStarted
-        }
-      }
-
-      def gamePane = new Panel {
-        override def paintComponent(g: Graphics2D) {
-          g.setColor(Color.BLACK)
-          if (gameStarted) {
-            g.fillRect(0, player1Pos.y, 12, 100)
-            g.fillRect(size.width - 12, player2Pos.y, 12, 100)
-            g.fillRect(ballPos.x, ballPos.y, 8, 8)
-          } else {
-            g.fillRect(0, mainPane.size.height / 2 - 50, 12, 100)
-            g.fillRect(size.width - 12, mainPane.size.height / 2 - 50, 12, 100)
-            g.fillRect(size.width / 2 - 4, mainPane.size.height / 2 - 4, 8, 8)
-          }
         }
       }
 
@@ -81,19 +83,26 @@ class Scene extends Actor {
       }
 
       contents = mainPane
+      title = "PONG: Back to 1972"
       size = new swing.Dimension(600, 500)
       visible = true
     }
   }
 }
 
-case class Position(x: Int, y: Int)
+abstract class Point {
+  def x: Int
 
-case class PlayerPosition(y: Int) {
+  def y: Int
+}
 
-  def moveUp(): PlayerPosition = new PlayerPosition(y - 5)
+case class Position(x: Int, y: Int) extends Point
 
-  def moveDown(): PlayerPosition = new PlayerPosition(y + 5)
+case class PlayerPosition(x: Int, y: Int) extends Point {
+
+  def moveUp(): PlayerPosition = new PlayerPosition(x, y - 5)
+
+  def moveDown(): PlayerPosition = new PlayerPosition(x, y + 5)
 
 }
 
