@@ -34,12 +34,7 @@ class Scene extends Actor {
 
   override def receive: Receive = {
     case ShowScene => showScene(sender())
-    case RedrawScene =>
-      mainPane.repaint()
-      if (ball.intersects(paddle1) || ball.intersects(paddle2)) {
-        ball = new Ball(ball.x, ball.y, ball.d * -1)
-      }
-      ball = ball.move()
+    case RedrawScene => redrawScene()
   }
 
   def showScene(sender: ActorRef) = {
@@ -84,7 +79,7 @@ class Scene extends Actor {
         focusable = true
         listenTo(keys)
         reactions += {
-          case KeyPressed(_, Key.W, _, _) => paddle1 = paddle1.up()
+          case KeyPressed(_, Key.WSm, _, _) => paddle1 = paddle1.up()
           case KeyPressed(_, Key.S, _, _) => paddle1 = paddle1.down()
           case KeyPressed(_, Key.O, _, _) => paddle2 = paddle2.up()
           case KeyPressed(_, Key.K, _, _) => paddle2 = paddle2.down()
@@ -96,6 +91,14 @@ class Scene extends Actor {
       size = new swing.Dimension(600, 500)
       visible = true
     }
+  }
+
+  def redrawScene() = {
+    mainPane.repaint()
+    if (ball.intersects(paddle1) || ball.intersects(paddle2)) {
+      ball = new Ball(ball.x, ball.y, ball.d * -1)
+    }
+    ball = ball.move()
   }
 }
 
