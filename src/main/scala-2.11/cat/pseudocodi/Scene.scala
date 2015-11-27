@@ -24,9 +24,9 @@ object Scene {
 class Scene extends Actor {
 
   var mainPane: Panel = null
-  val paddleWidth = 12
-  val paddleHeight = 100
-  val ballSquare = 8
+  val paddleW = 12
+  val paddleH = 100
+  val ballWH = 8
 
   override def receive: Receive = {
     case ShowScene => showScene(sender())
@@ -34,25 +34,30 @@ class Scene extends Actor {
   }
 
   def showScene(sender: ActorRef) = {
-    var player1Pos: PlayerPosition = null
-    var player2Pos: PlayerPosition = null
+    var paddle1Pos: PaddlePosition = null
+    var paddle2Pos: PaddlePosition = null
     var ballPos: Position = null
     var gameStarted = false
 
     new MainFrame {
 
       val gamePane = new Panel {
+
         override def paintComponent(g: Graphics2D) {
           g.setColor(Color.BLACK)
+          g.fillRect(0, 0, size.width, size.height)
+          g.setColor(Color.white)
           if (gameStarted) {
-            g.fillRect(player1Pos.x, player1Pos.y, paddleWidth, paddleHeight)
-            g.fillRect(player2Pos.x, player2Pos.y, paddleWidth, paddleHeight)
-            g.fillRect(ballPos.x, ballPos.y, ballSquare, ballSquare)
+            g.fillRect(paddle1Pos.x, paddle1Pos.y, paddleW, paddleH)
+            g.fillRect(paddle2Pos.x, paddle2Pos.y, paddleW, paddleH)
+            g.fillRect(ballPos.x, ballPos.y, ballWH, ballWH)
+            ballPos = new Position(ballPos.x + 8, ballPos.y + 2)
           } else {
-            g.fillRect(0, size.height / 2 - (paddleHeight / 2), paddleWidth, paddleHeight)
-            g.fillRect(size.width - paddleWidth, size.height / 2 - (paddleHeight / 2), paddleWidth, paddleHeight)
-            g.fillRect(size.width / 2 - (ballSquare / 2), size.height / 2 - (ballSquare / 2), ballSquare, ballSquare)
+            g.fillRect(4, size.height / 2 - (paddleH / 2), paddleW, paddleH)
+            g.fillRect(size.width - paddleW - 4, size.height / 2 - (paddleH / 2), paddleW, paddleH)
+            g.fillRect(size.width / 2 - (ballWH / 2), size.height / 2 - (ballWH / 2), ballWH, ballWH)
           }
+
         }
       }
 
@@ -61,9 +66,9 @@ class Scene extends Actor {
           gameStarted = true
           mainPane.requestFocus()
           mainPane.requestFocusInWindow()
-          player1Pos = new PlayerPosition(0, gamePane.size.height / 2 - (paddleHeight / 2))
-          player2Pos = new PlayerPosition(gamePane.size.width - paddleWidth, gamePane.size.height / 2 - (paddleHeight / 2))
-          ballPos = new Position(size.width / 2 - (ballSquare / 2), gamePane.size.height / 2 - (ballSquare / 2))
+          paddle1Pos = new PaddlePosition(4, gamePane.size.height / 2 - (paddleH / 2))
+          paddle2Pos = new PaddlePosition(gamePane.size.width - paddleW - 4, gamePane.size.height / 2 - (paddleH / 2))
+          ballPos = new Position(size.width / 2 - (ballWH / 2), gamePane.size.height / 2 - (ballWH / 2))
           sender ! GameLoop.GameStarted
         }
       }
@@ -75,10 +80,10 @@ class Scene extends Actor {
         focusable = true
         listenTo(keys)
         reactions += {
-          case KeyPressed(_, Key.W, _, _) => player1Pos = player1Pos.moveUp()
-          case KeyPressed(_, Key.S, _, _) => player1Pos = player1Pos.moveDown()
-          case KeyPressed(_, Key.O, _, _) => player2Pos = player2Pos.moveUp()
-          case KeyPressed(_, Key.K, _, _) => player2Pos = player2Pos.moveDown()
+          case KeyPressed(_, Key.W, _, _) => paddle1Pos = paddle1Pos.moveUp()
+          case KeyPressed(_, Key.S, _, _) => paddle1Pos = paddle1Pos.moveDown()
+          case KeyPressed(_, Key.O, _, _) => paddle2Pos = paddle2Pos.moveUp()
+          case KeyPressed(_, Key.K, _, _) => paddle2Pos = paddle2Pos.moveDown()
         }
       }
 
@@ -98,11 +103,11 @@ abstract class Point {
 
 case class Position(x: Int, y: Int) extends Point
 
-case class PlayerPosition(x: Int, y: Int) extends Point {
+case class PaddlePosition(x: Int, y: Int) extends Point {
 
-  def moveUp(): PlayerPosition = new PlayerPosition(x, y - 5)
+  def moveUp(): PaddlePosition = new PaddlePosition(x, y - 5)
 
-  def moveDown(): PlayerPosition = new PlayerPosition(x, y + 5)
+  def moveDown(): PaddlePosition = new PaddlePosition(x, y + 5)
 
 }
 
