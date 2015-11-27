@@ -79,7 +79,7 @@ class Scene extends Actor {
         focusable = true
         listenTo(keys)
         reactions += {
-          case KeyPressed(_, Key.WSm, _, _) => paddle1 = paddle1.up()
+          case KeyPressed(_, Key.W, _, _) => paddle1 = paddle1.up()
           case KeyPressed(_, Key.S, _, _) => paddle1 = paddle1.down()
           case KeyPressed(_, Key.O, _, _) => paddle2 = paddle2.up()
           case KeyPressed(_, Key.K, _, _) => paddle2 = paddle2.down()
