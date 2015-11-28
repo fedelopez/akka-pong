@@ -30,7 +30,10 @@ class Scene extends Actor {
   var paddle1: Paddle = null
   var paddle2: Paddle = null
   var ball: Ball = null
+  var initBall: Ball = null
   var gameStarted = false
+  var paneHeight = 0
+  var paneWidth = 0
 
   override def receive: Receive = {
     case ShowScene => showScene(sender())
@@ -44,7 +47,7 @@ class Scene extends Actor {
       val gamePane = new Panel {
 
         override def paintComponent(g: Graphics2D) {
-          g.setColor(Color.BLACK)
+          g.setColor(Color.black)
           g.fillRect(0, 0, size.width, size.height)
           g.setColor(Color.white)
           if (gameStarted) {
@@ -62,12 +65,15 @@ class Scene extends Actor {
 
       def startBtn = new Button {
         action = Action("Start") {
+          paneHeight = gamePane.size.height
+          paneWidth = gamePane.size.width
           gameStarted = true
           mainPane.requestFocus()
           mainPane.requestFocusInWindow()
-          paddle1 = new Paddle(4, gamePane.size.height / 2 - (paddleH / 2))
-          paddle2 = new Paddle(gamePane.size.width - paddleW - 4, gamePane.size.height / 2 - (paddleH / 2))
-          ball = new Ball(size.width / 2 - (ballWH / 2), gamePane.size.height / 2 - (ballWH / 2), 1)
+          paddle1 = new Paddle(4, paneHeight / 2 - (paddleH / 2))
+          paddle2 = new Paddle(paneWidth - paddleW - 4, paneHeight / 2 - (paddleH / 2))
+          initBall = new Ball(size.width / 2 - (ballWH / 2), paneHeight / 2 - (ballWH / 2), 1, 8)
+          ball = initBall
           sender ! GameLoop.GameStarted
         }
       }
@@ -87,6 +93,7 @@ class Scene extends Actor {
       }
 
       contents = mainPane
+      resizable = false
       title = "PONG: Back to 1972"
       size = new swing.Dimension(600, 500)
       visible = true
@@ -96,7 +103,11 @@ class Scene extends Actor {
   def redrawScene() = {
     mainPane.repaint()
     if (ball.intersects(paddle1) || ball.intersects(paddle2)) {
-      ball = new Ball(ball.x, ball.y, ball.d * -1)
+      ball = new Ball(ball.x, ball.y, ball.dx * -1, ball.dy)
+    } else if (ball.y <= 0 || ball.y + ball.h >= paneHeight) {
+      ball = new Ball(ball.x, ball.y, ball.dx, ball.dy * -1)
+    } else if (ball.x + ball.w < 0 || ball.x > paneWidth) {
+      ball = initBall
     }
     ball = ball.move()
   }

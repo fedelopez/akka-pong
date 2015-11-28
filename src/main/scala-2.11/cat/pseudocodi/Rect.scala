@@ -19,16 +19,24 @@ abstract class Rect {
   }
 }
 
-case class Ball(x: Int, y: Int, d: Int, w: Int = 8, h: Int = 8) extends Rect {
+case class Ball(x: Int, y: Int, dx: Int, dy: Int) extends Rect {
 
-  def move(): Ball = new Ball(x + (w * d), y + 0, d)
+  def w: Int = 8
+
+  def h: Int = 8
+
+  def move(): Ball = new Ball(x + (w * dx), y + dy, dx, dy)
 
 }
 
-case class Paddle(x: Int, y: Int, w: Int = 12, h: Int = 100) extends Rect {
+case class Paddle(x: Int, y: Int) extends Rect {
 
-  def up(): Paddle = new Paddle(x, y - 5)
+  def w: Int = 12
 
-  def down(): Paddle = new Paddle(x, y + 5)
+  def h: Int = 100
+
+  def up(): Paddle = new Paddle(x, y - (h / 5))
+
+  def down(): Paddle = new Paddle(x, y + (h / 5))
 
 }
