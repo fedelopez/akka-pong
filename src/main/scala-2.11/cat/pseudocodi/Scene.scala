@@ -1,12 +1,11 @@
 package cat.pseudocodi
 
-import java.awt.Color
-import javax.swing.BorderFactory
+import java.awt.{Color, Font}
+import java.io.File
 
 import akka.actor.{Actor, ActorRef}
 import cat.pseudocodi.Scene._
 
-import scala.swing.BorderPanel.Position._
 import scala.swing._
 import scala.swing.event._
 
@@ -22,18 +21,21 @@ object Scene {
 }
 
 class Scene extends Actor {
+
+  val paneWidth = 600
+  val paneHeight = 500
   val paddleW = 12
   val paddleH = 100
   val ballWH = 8
 
   var mainPane: Panel = null
-  var paddle1: Paddle = null
-  var paddle2: Paddle = null
-  var ball: Ball = null
-  var initBall: Ball = null
+  var paddle1: Paddle = new Paddle(4, paneHeight / 2 - (paddleH / 2))
+  var paddle2: Paddle = new Paddle(paneWidth - paddleW - 4, paneHeight / 2 - (paddleH / 2))
+  val initBall: Ball = new Ball(paneWidth / 2 - (ballWH / 2), paneHeight / 2 - (ballWH / 2), 1, 8)
+  var ball: Ball = initBall
   var gameStarted = false
-  var paneHeight = 0
-  var paneWidth = 0
+
+  val gameFont = Font.createFont(Font.TRUETYPE_FONT, new File(getClass.getResource("/arcadeclassic.ttf").getFile))
 
   override def receive: Receive = {
     case ShowScene => showScene(sender())
@@ -43,8 +45,13 @@ class Scene extends Actor {
   def showScene(sender: ActorRef) = {
 
     new MainFrame {
+      mainPane = new Panel {
+        focusable = true
+        font = gameFont.deriveFont(36f)
 
-      val gamePane = new Panel {
+        val fontHeight = peer.getFontMetrics(font).getHeight
+        val titleWidth = peer.getFontMetrics(font).stringWidth("PONG")
+        val startWidth = peer.getFontMetrics(font).stringWidth("PRESS SPACE")
 
         override def paintComponent(g: Graphics2D) {
           g.setColor(Color.black)
@@ -55,36 +62,14 @@ class Scene extends Actor {
             g.fillRect(paddle2.x, paddle2.y, paddle1.w, paddle1.h)
             g.fillRect(ball.x, ball.y, ball.w, ball.h)
           } else {
-            g.fillRect(4, size.height / 2 - (paddleH / 2), paddleW, paddleH)
-            g.fillRect(size.width - paddleW - 4, size.height / 2 - (paddleH / 2), paddleW, paddleH)
-            g.fillRect(size.width / 2 - (ballWH / 2), size.height / 2 - (ballWH / 2), ballWH, ballWH)
+            g.drawString("PONG", size.width / 2 - (titleWidth / 2), size.height / 2 - fontHeight / 2)
+            g.drawString("PRESS SPACE", size.width / 2 - (startWidth / 2), size.height / 2 + fontHeight / 2)
           }
-
         }
-      }
 
-      def startBtn = new Button {
-        action = Action("Start") {
-          paneHeight = gamePane.size.height
-          paneWidth = gamePane.size.width
-          gameStarted = true
-          mainPane.requestFocus()
-          mainPane.requestFocusInWindow()
-          paddle1 = new Paddle(4, paneHeight / 2 - (paddleH / 2))
-          paddle2 = new Paddle(paneWidth - paddleW - 4, paneHeight / 2 - (paddleH / 2))
-          initBall = new Ball(paneWidth / 2 - (ballWH / 2), paneHeight / 2 - (ballWH / 2), 1, 8)
-          ball = initBall
-          sender ! GameLoop.GameStarted
-        }
-      }
-
-      mainPane = new BorderPanel {
-        border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
-        layout(startBtn) = North
-        layout(gamePane) = Center
-        focusable = true
         listenTo(keys)
         reactions += {
+          case KeyPressed(_, Key.Space, _, _) => if (!gameStarted) startGame()
           case KeyPressed(_, Key.W, _, _) => paddle1 = paddle1.up()
           case KeyPressed(_, Key.S, _, _) => paddle1 = paddle1.down()
           case KeyPressed(_, Key.O, _, _) => paddle2 = paddle2.up()
@@ -92,10 +77,17 @@ class Scene extends Actor {
         }
       }
 
+      def startGame() = {
+        gameStarted = true
+        mainPane.requestFocus()
+        mainPane.requestFocusInWindow()
+        sender ! GameLoop.GameStarted
+      }
+
       contents = mainPane
       resizable = false
       title = "PONG: Back to 1972"
-      size = new swing.Dimension(600, 500)
+      size = new swing.Dimension(paneWidth, paneHeight + 24)
       visible = true
     }
   }
@@ -104,7 +96,7 @@ class Scene extends Actor {
     mainPane.repaint()
     if (ball.intersects(paddle1) || ball.intersects(paddle2)) {
       ball = new Ball(ball.x, ball.y, ball.dx * -1, ball.dy)
-    } else if (ball.y <= 0 || ball.y + ball.h >= paneHeight) {
+    } else if (ball.y <= 0 || (ball.y + ball.h) >= paneHeight) {
       ball = new Ball(ball.x, ball.y, ball.dx, ball.dy * -1)
     } else if (ball.x + ball.w < 0 || ball.x > paneWidth) {
       ball = initBall
