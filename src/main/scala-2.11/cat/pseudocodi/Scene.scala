@@ -72,7 +72,7 @@ class Scene extends Actor {
           mainPane.requestFocusInWindow()
           paddle1 = new Paddle(4, paneHeight / 2 - (paddleH / 2))
           paddle2 = new Paddle(paneWidth - paddleW - 4, paneHeight / 2 - (paddleH / 2))
-          initBall = new Ball(size.width / 2 - (ballWH / 2), paneHeight / 2 - (ballWH / 2), 1, 8)
+          initBall = new Ball(paneWidth / 2 - (ballWH / 2), paneHeight / 2 - (ballWH / 2), 1, 8)
           ball = initBall
           sender ! GameLoop.GameStarted
         }
