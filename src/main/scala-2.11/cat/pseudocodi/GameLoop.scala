@@ -21,7 +21,7 @@ class GameLoop extends Actor {
   scene ! Scene.ShowScene
 
   override def receive: Receive = {
-    case GameLoop.GameStarted => context.system.scheduler.schedule(Duration.Zero, 40.millis, scene, Scene.RedrawScene)
+    case GameLoop.GameStarted => context.system.scheduler.schedule(Duration.Zero, 20.millis, scene, Scene.RedrawScene)
   }
 
 }

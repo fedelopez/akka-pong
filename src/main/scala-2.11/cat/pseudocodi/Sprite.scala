@@ -23,21 +23,31 @@ abstract class Sprite {
   }
 }
 
+case object Ball {
+  val width = 8
+  val height = 8
+}
+
 case class Ball(x: Int, y: Int, dx: Int, dy: Int) extends Sprite {
 
-  def w: Int = 8
+  def w: Int = Ball.width
 
-  def h: Int = 8
+  def h: Int = Ball.height
 
   def move(): Ball = new Ball(x + (w * dx), y + dy, dx, dy)
 
 }
 
+case object Paddle {
+  val width = 12
+  val height = 100
+}
+
 case class Paddle(name: String, x: Int, y: Int) extends Sprite {
 
-  def w: Int = 12
+  def w: Int = Paddle.width
 
-  def h: Int = 100
+  def h: Int = Paddle.height
 
   def up(): Paddle = new Paddle(name, x, y - (h / 5))
 

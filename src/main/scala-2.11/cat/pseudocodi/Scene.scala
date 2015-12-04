@@ -11,6 +11,7 @@ import cat.pseudocodi.GameLoop.GameStarted
 import cat.pseudocodi.Scene._
 
 import scala.swing._
+import scala.util.Random
 
 /**
   * @author Fede
@@ -25,13 +26,9 @@ object Scene {
 
 class Scene extends Actor {
 
-  val paddleW = 12
-  val paddleH = 100
-  val ballWH = 8
-
   var bounds: Rectangle = null
   var paddle1, paddle2: Paddle = null
-  var ball, initBall: Ball = null
+  var ball: Ball = null
 
   var gameStarted = false
   var bufferStrategy: BufferStrategy = null
@@ -79,10 +76,9 @@ class Scene extends Actor {
     bufferStrategy = frame.getBufferStrategy
     drawStartScreen(frame, bufferStrategy)
 
-    paddle1 = new Paddle("p1", 50, bounds.height / 2 - (paddleH / 2))
-    paddle2 = new Paddle("p2", bounds.width - paddleW - 50, bounds.height / 2 - (paddleH / 2))
-    initBall = new Ball(bounds.width / 2 - (ballWH / 2), bounds.height / 2 - (ballWH / 2), 1, 8)
-    ball = initBall
+    paddle1 = new Paddle("p1", 50, bounds.height / 2 - Paddle.height / 2)
+    paddle2 = new Paddle("p2", bounds.width - Paddle.width - 50, bounds.height / 2 - Paddle.height / 2)
+    ball = initBall()
   }
 
   def drawStartScreen(frame: Frame, bufferStrategy: BufferStrategy) = {
@@ -123,7 +119,7 @@ class Scene extends Actor {
     } else if (ball.y <= 0 || (ball.y + ball.h) >= bounds.height) {
       ball = new Ball(ball.x, ball.y, ball.dx, ball.dy * -1)
     } else if (ball.x + ball.w < 0 || ball.x > bounds.width) {
-      ball = initBall
+      ball = initBall()
     }
     ball = ball.move()
 
@@ -155,6 +151,13 @@ class Scene extends Actor {
     } else {
       if (paddle2.y + paddle2.h < bounds.height) paddle2 = paddle2.down()
     }
+  }
+
+  def initBall() = new Ball(bounds.width / 2 - Ball.width / 2, bounds.height / 2 - Ball.height / 2, randomSign(), Random.nextInt(Ball.width * 2) * randomSign())
+
+  def randomSign() = Random.nextBoolean() match {
+    case true => 1
+    case false => -1
   }
 }
 
