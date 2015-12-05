@@ -6,7 +6,7 @@ import java.awt.image.BufferStrategy
 import java.awt.{Color, Font, Frame, _}
 import java.io.File
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import cat.pseudocodi.GameLoop.GameStarted
 import cat.pseudocodi.Scene._
 
@@ -40,9 +40,11 @@ class Scene extends Actor {
   var paddle1PressedKey: Option[Int] = None
   var paddle2PressedKey: Option[Int] = None
 
+  val soundActor = context.actorOf(Props[SoundActor])
+
   override def receive: Receive = {
     case ShowScene => showScene(sender())
-    case RedrawScene => drawGameScreen()
+    case RedrawScene => reDrawScene()
   }
 
   def showScene(sender: ActorRef) = {
@@ -76,8 +78,8 @@ class Scene extends Actor {
     bufferStrategy = frame.getBufferStrategy
     drawStartScreen(frame, bufferStrategy)
 
-    paddle1 = new Paddle("p1", 50, bounds.height / 2 - Paddle.height / 2)
-    paddle2 = new Paddle("p2", bounds.width - Paddle.width - 50, bounds.height / 2 - Paddle.height / 2)
+    paddle1 = new Paddle("p1", bounds.width / 2 - (bounds.width / 3), bounds.height / 2 - Paddle.height / 2)
+    paddle2 = new Paddle("p2", bounds.width / 2 + (bounds.width / 3), bounds.height / 2 - Paddle.height / 2)
     ball = initBall()
   }
 
@@ -102,7 +104,7 @@ class Scene extends Actor {
     }
   }
 
-  def drawGameScreen() = {
+  def reDrawScene() = {
     //COLLISIONS: PADDLE
     paddle1PressedKey.foreach((keyCode: Int) => keyCode match {
       case VK_W => movePaddleUpRequested(paddle1.name)
@@ -116,10 +118,13 @@ class Scene extends Actor {
     //COLLISIONS: BALL
     if (ball.intersects(paddle1) || ball.intersects(paddle2)) {
       ball = new Ball(ball.x, ball.y, ball.dx * -1, ball.dy)
+      soundActor ! SoundActor.Ping
     } else if (ball.y <= 0 || (ball.y + ball.h) >= bounds.height) {
       ball = new Ball(ball.x, ball.y, ball.dx, ball.dy * -1)
-    } else if (ball.x + ball.w < 0 || ball.x > bounds.width) {
+      soundActor ! SoundActor.Pong
+    } else if (ball.x + ball.w < paddle1.x - 50 || ball.x + ball.w > paddle2.x + paddle2.w + 50) {
       ball = initBall()
+      soundActor ! SoundActor.Miss
     }
     ball = ball.move()
 
@@ -132,7 +137,7 @@ class Scene extends Actor {
       g.fillRect(paddle1.x, paddle1.y, paddle1.w, paddle1.h)
       g.fillRect(paddle2.x, paddle2.y, paddle2.w, paddle2.h)
       g.fillRect(ball.x, ball.y, ball.w, ball.h)
-      g.setStroke(new BasicStroke(4f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, Array(6.0f), 0.0f))
+      g.setStroke(new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, Array(12f), 0.0f))
       g.drawLine(bounds.width / 2, 0, bounds.width / 2, bounds.height)
       bufferStrategy.show()
       g.dispose()
