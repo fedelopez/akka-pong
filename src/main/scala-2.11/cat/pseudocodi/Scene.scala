@@ -3,14 +3,14 @@ package cat.pseudocodi
 import java.awt.event.KeyEvent._
 import java.awt.event.{KeyAdapter, KeyEvent}
 import java.awt.image.BufferStrategy
-import java.awt.{Color, Font, Frame, GraphicsConfiguration, GraphicsDevice, GraphicsEnvironment}
+import java.awt.{Color, Font, Frame, _}
 import java.io.File
 
 import akka.actor.{Actor, ActorRef}
 import cat.pseudocodi.GameLoop.GameStarted
 import cat.pseudocodi.Scene._
 
-import scala.swing._
+import scala.swing.{Graphics2D, Rectangle}
 import scala.util.Random
 
 /**
@@ -124,7 +124,7 @@ class Scene extends Actor {
     ball = ball.move()
 
     //REPAINT
-    val g = bufferStrategy.getDrawGraphics
+    val g = bufferStrategy.getDrawGraphics.asInstanceOf[Graphics2D]
     if (!bufferStrategy.contentsLost) {
       g.setColor(Color.black)
       g.fillRect(0, 0, bounds.width, bounds.height)
@@ -132,6 +132,8 @@ class Scene extends Actor {
       g.fillRect(paddle1.x, paddle1.y, paddle1.w, paddle1.h)
       g.fillRect(paddle2.x, paddle2.y, paddle2.w, paddle2.h)
       g.fillRect(ball.x, ball.y, ball.w, ball.h)
+      g.setStroke(new BasicStroke(4f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, Array(6.0f), 0.0f))
+      g.drawLine(bounds.width / 2, 0, bounds.width / 2, bounds.height)
       bufferStrategy.show()
       g.dispose()
     }
