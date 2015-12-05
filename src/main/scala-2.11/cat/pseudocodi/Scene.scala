@@ -56,20 +56,20 @@ class Scene extends Actor {
     frame.setIgnoreRepaint(true)
     frame.addKeyListener(new KeyAdapter {
       override def keyPressed(e: KeyEvent) = e.getKeyCode match {
-        case VK_SPACE => gameStarted = true; sender ! GameStarted
-        case VK_W => paddle1PressedKey = Some(VK_W)
-        case VK_S => paddle1PressedKey = Some(VK_S)
-        case VK_O => paddle2PressedKey = Some(VK_O)
-        case VK_K => paddle2PressedKey = Some(VK_K)
-        case _ => println("other")
+        case VK_SPACE if !gameStarted => gameStarted = true; sender ! GameStarted
+        case VK_W if gameStarted => paddle1PressedKey = Some(VK_W)
+        case VK_S if gameStarted => paddle1PressedKey = Some(VK_S)
+        case VK_O if gameStarted => paddle2PressedKey = Some(VK_O)
+        case VK_K if gameStarted => paddle2PressedKey = Some(VK_K)
+        case _ => ()
       }
 
       override def keyReleased(e: KeyEvent) = e.getKeyCode match {
-        case VK_W => paddle1PressedKey = None
-        case VK_S => paddle1PressedKey = None
-        case VK_O => paddle2PressedKey = None
-        case VK_K => paddle2PressedKey = None
-        case _ => println("other")
+        case VK_W if gameStarted => paddle1PressedKey = None
+        case VK_S if gameStarted => paddle1PressedKey = None
+        case VK_O if gameStarted => paddle2PressedKey = None
+        case VK_K if gameStarted => paddle2PressedKey = None
+        case _ => ()
       }
     })
     device.setFullScreenWindow(frame)
