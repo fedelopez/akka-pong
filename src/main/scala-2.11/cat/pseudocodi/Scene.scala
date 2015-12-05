@@ -30,10 +30,10 @@ class Scene extends Actor {
   var paddle1, paddle2: Paddle = null
   var ball: Ball = null
 
-  var gameStarted = false
+  var playing = false
   var bufferStrategy: BufferStrategy = null
 
-  val mediumFont = Font.createFont(Font.TRUETYPE_FONT, new File(getClass.getResource("/arcadeclassic.ttf").getFile)).deriveFont(36f)
+  val mediumFont = Font.createFont(Font.TRUETYPE_FONT, new File(getClass.getResource("/arcade_classic.ttf").getFile)).deriveFont(36f)
   val largeFont = mediumFont.deriveFont(72f)
   var mediumFontHeight, largeFontHeight, titleWidth, startWidth: Int = 0
 
@@ -56,19 +56,19 @@ class Scene extends Actor {
     frame.setIgnoreRepaint(true)
     frame.addKeyListener(new KeyAdapter {
       override def keyPressed(e: KeyEvent) = e.getKeyCode match {
-        case VK_SPACE if !gameStarted => gameStarted = true; sender ! GameStarted
-        case VK_W if gameStarted => paddle1PressedKey = Some(VK_W)
-        case VK_S if gameStarted => paddle1PressedKey = Some(VK_S)
-        case VK_O if gameStarted => paddle2PressedKey = Some(VK_O)
-        case VK_K if gameStarted => paddle2PressedKey = Some(VK_K)
+        case VK_SPACE if !playing => playing = true; sender ! GameStarted
+        case VK_W if playing => paddle1PressedKey = Some(VK_W)
+        case VK_S if playing => paddle1PressedKey = Some(VK_S)
+        case VK_O if playing => paddle2PressedKey = Some(VK_O)
+        case VK_K if playing => paddle2PressedKey = Some(VK_K)
         case _ => ()
       }
 
       override def keyReleased(e: KeyEvent) = e.getKeyCode match {
-        case VK_W if gameStarted => paddle1PressedKey = None
-        case VK_S if gameStarted => paddle1PressedKey = None
-        case VK_O if gameStarted => paddle2PressedKey = None
-        case VK_K if gameStarted => paddle2PressedKey = None
+        case VK_W if playing => paddle1PressedKey = None
+        case VK_S if playing => paddle1PressedKey = None
+        case VK_O if playing => paddle2PressedKey = None
+        case VK_K if playing => paddle2PressedKey = None
         case _ => ()
       }
     })
