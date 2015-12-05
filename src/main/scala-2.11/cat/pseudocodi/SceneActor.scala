@@ -7,8 +7,8 @@ import java.awt.{Color, Font, Frame, _}
 import java.io.File
 
 import akka.actor.{Actor, ActorRef, Props}
-import cat.pseudocodi.GameLoop.GameStarted
-import cat.pseudocodi.Scene._
+import cat.pseudocodi.GameLoopActor.GameStarted
+import cat.pseudocodi.SceneActor._
 
 import scala.swing.{Graphics2D, Rectangle}
 import scala.util.Random
@@ -16,7 +16,7 @@ import scala.util.Random
 /**
   * @author Fede
   */
-object Scene {
+object SceneActor {
 
   case object ShowScene
 
@@ -24,7 +24,7 @@ object Scene {
 
 }
 
-class Scene extends Actor {
+class SceneActor extends Actor {
 
   var bounds: Rectangle = null
   var paddle1, paddle2: Paddle = null
