@@ -56,26 +56,22 @@ class SceneActor extends Actor {
     frame.addKeyListener(new KeyAdapter {
       override def keyPressed(e: KeyEvent) = e.getKeyCode match {
         case VK_SPACE if !playing => playing = true; sender ! GameStarted
-        case VK_W if playing => paddle1PressedKey = Some(VK_W)
-        case VK_S if playing => paddle1PressedKey = Some(VK_S)
-        case VK_O if playing => paddle2PressedKey = Some(VK_O)
-        case VK_K if playing => paddle2PressedKey = Some(VK_K)
+        case VK_W | VK_S if playing => paddle1PressedKey = Some(e.getKeyCode)
+        case VK_O | VK_K if playing => paddle2PressedKey = Some(e.getKeyCode)
         case _ => ()
       }
 
       override def keyReleased(e: KeyEvent) = e.getKeyCode match {
-        case VK_W if playing => paddle1PressedKey = None
-        case VK_S if playing => paddle1PressedKey = None
-        case VK_O if playing => paddle2PressedKey = None
-        case VK_K if playing => paddle2PressedKey = None
+        case VK_W | VK_S if playing => paddle1PressedKey = None
+        case VK_O | VK_K if playing => paddle2PressedKey = None
         case _ => ()
       }
     })
     device.setFullScreenWindow(frame)
     bounds = frame.getBounds
     frame.createBufferStrategy(2)
-    paddle1 = new Paddle("p1", bounds.width / 2 - (bounds.width / 3), bounds.height / 2 - Paddle.height / 2)
-    paddle2 = new Paddle("p2", bounds.width / 2 + (bounds.width / 3), bounds.height / 2 - Paddle.height / 2)
+    paddle1 = new Paddle("p1", bounds.width / 2 - (bounds.width / 3), bounds.height / 2 - Paddle.height / 2, bounds)
+    paddle2 = new Paddle("p2", bounds.width / 2 + (bounds.width / 3), bounds.height / 2 - Paddle.height / 2, bounds)
     ball = initBall(randomSign())
   }
 
@@ -102,12 +98,12 @@ class SceneActor extends Actor {
   def drawGameScene() = {
     //COLLISIONS: PADDLE
     paddle1PressedKey.foreach((keyCode: Int) => keyCode match {
-      case VK_W => movePaddleUpRequested(paddle1.name)
-      case VK_S => movePaddleDownRequested(paddle1.name)
+      case VK_W => paddle1 = paddle1.up()
+      case VK_S => paddle1 = paddle1.down()
     })
     paddle2PressedKey.foreach((keyCode: Int) => keyCode match {
-      case VK_O => movePaddleUpRequested(paddle2.name)
-      case VK_K => movePaddleDownRequested(paddle2.name)
+      case VK_O => paddle2 = paddle2.up()
+      case VK_K => paddle2 = paddle2.down()
     })
 
     //COLLISIONS: BALL
@@ -152,29 +148,12 @@ class SceneActor extends Actor {
     }
   }
 
-  def movePaddleUpRequested(paddle: String): Unit = {
-    if (paddle.equals(paddle1.name)) {
-      if (paddle1.y >= 0) paddle1 = paddle1.up()
-    } else {
-      if (paddle2.y >= 0) paddle2 = paddle2.up()
-    }
-  }
-
-  def movePaddleDownRequested(paddle: String): Unit = {
-    if (paddle.equals(paddle1.name)) {
-      if (paddle1.y + paddle1.h < bounds.height) paddle1 = paddle1.down()
-    } else {
-      if (paddle2.y + paddle2.h < bounds.height) paddle2 = paddle2.down()
-    }
-  }
-
   def initBall(dx: Int) = new Ball(bounds.width / 2 - Ball.width / 2, bounds.height / 2 - Ball.height / 2, dx, Random.nextInt(Ball.width * 2) * randomSign())
 
   def randomSign() = Random.nextBoolean() match {
     case true => 1
     case false => -1
   }
-
 
   type Width = Int
   type Height = Int
