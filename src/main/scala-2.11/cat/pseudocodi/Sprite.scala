@@ -43,14 +43,15 @@ case object Paddle {
   val height = 100
 }
 
-case class Paddle(name: String, x: Int, y: Int) extends Sprite {
+case class Paddle(name: String, x: Int, y: Int, score: Int = 0) extends Sprite {
 
   def w: Int = Paddle.width
 
   def h: Int = Paddle.height
 
-  def up(): Paddle = new Paddle(name, x, y - (h / 5))
+  def up(): Paddle = new Paddle(name, x, y - (h / 5), score)
 
-  def down(): Paddle = new Paddle(name, x, y + (h / 5))
+  def down(): Paddle = new Paddle(name, x, y + (h / 5), score)
 
+  def scoreUp(): Paddle = new Paddle(name, x, y, score + 1)
 }

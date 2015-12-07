@@ -2,7 +2,6 @@ package cat.pseudocodi
 
 import java.awt.event.KeyEvent._
 import java.awt.event.{KeyAdapter, KeyEvent}
-import java.awt.image.BufferStrategy
 import java.awt.{Color, Font, Frame, _}
 import java.io.File
 
@@ -31,11 +30,11 @@ class SceneActor extends Actor {
   var ball: Ball = null
 
   var playing = false
-  var bufferStrategy: BufferStrategy = null
 
-  val mediumFont = Font.createFont(Font.TRUETYPE_FONT, new File(getClass.getResource("/arcade_classic.ttf").getFile)).deriveFont(36f)
-  val largeFont = mediumFont.deriveFont(72f)
-  var mediumFontHeight, largeFontHeight, titleWidth, startWidth: Int = 0
+  var frame: Frame = null
+  val smallFont = Font.createFont(Font.TRUETYPE_FONT, new File(getClass.getResource("/arcade_classic.ttf").getFile)).deriveFont(36f)
+  val mediumFont = smallFont.deriveFont(72f)
+  val largeFont = smallFont.deriveFont(144f)
 
   var paddle1PressedKey: Option[Int] = None
   var paddle2PressedKey: Option[Int] = None
@@ -43,15 +42,15 @@ class SceneActor extends Actor {
   val soundActor = context.actorOf(Props[SoundActor])
 
   override def receive: Receive = {
-    case ShowScene => showScene(sender())
-    case RedrawScene => reDrawScene()
+    case ShowScene => initScene(sender()); drawTitleScreen()
+    case RedrawScene => drawGameScene()
   }
 
-  def showScene(sender: ActorRef) = {
+  def initScene(sender: ActorRef) = {
     val env: GraphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment
     val device: GraphicsDevice = env.getDefaultScreenDevice
     val gc: GraphicsConfiguration = device.getDefaultConfiguration
-    val frame = new Frame(gc)
+    frame = new Frame(gc)
     frame.setUndecorated(true)
     frame.setIgnoreRepaint(true)
     frame.addKeyListener(new KeyAdapter {
@@ -75,36 +74,32 @@ class SceneActor extends Actor {
     device.setFullScreenWindow(frame)
     bounds = frame.getBounds
     frame.createBufferStrategy(2)
-    bufferStrategy = frame.getBufferStrategy
-    drawStartScreen(frame, bufferStrategy)
-
     paddle1 = new Paddle("p1", bounds.width / 2 - (bounds.width / 3), bounds.height / 2 - Paddle.height / 2)
     paddle2 = new Paddle("p2", bounds.width / 2 + (bounds.width / 3), bounds.height / 2 - Paddle.height / 2)
-    ball = initBall()
+    ball = initBall(randomSign())
   }
 
-  def drawStartScreen(frame: Frame, bufferStrategy: BufferStrategy) = {
-    largeFontHeight = frame.getFontMetrics(largeFont).getHeight
-    mediumFontHeight = frame.getFontMetrics(mediumFont).getHeight
-    titleWidth = frame.getFontMetrics(largeFont).stringWidth("PONG")
-    startWidth = frame.getFontMetrics(mediumFont).stringWidth("PRESS SPACE")
+  def drawTitleScreen() = {
+    val titleMetrics = fontMetrics("PONG", mediumFont)
+    val subtitleMetrics = fontMetrics("PRESS SPACE", smallFont)
 
+    val bufferStrategy = frame.getBufferStrategy
     val g = bufferStrategy.getDrawGraphics
     if (!bufferStrategy.contentsLost) {
       g.setColor(Color.black)
       g.fillRect(0, 0, bounds.width, bounds.height)
       g.setColor(Color.white)
-      g.setFont(largeFont)
-      g.drawString("PONG", bounds.width / 2 - (titleWidth / 2), bounds.height / 2 - largeFontHeight / 2)
       g.setFont(mediumFont)
-      g.drawString("PRESS SPACE", bounds.width / 2 - (startWidth / 2), bounds.height / 2 + largeFontHeight / 2)
+      g.drawString("PONG", bounds.width / 2 - (titleMetrics._1 / 2), bounds.height / 2 - titleMetrics._2 / 2)
+      g.setFont(smallFont)
+      g.drawString("PRESS SPACE", bounds.width / 2 - (subtitleMetrics._1 / 2), bounds.height / 2 + subtitleMetrics._2 / 2)
 
       bufferStrategy.show()
       g.dispose()
     }
   }
 
-  def reDrawScene() = {
+  def drawGameScene() = {
     //COLLISIONS: PADDLE
     paddle1PressedKey.foreach((keyCode: Int) => keyCode match {
       case VK_W => movePaddleUpRequested(paddle1.name)
@@ -122,13 +117,19 @@ class SceneActor extends Actor {
     } else if (ball.y <= 0 || (ball.y + ball.h) >= bounds.height) {
       ball = new Ball(ball.x, ball.y, ball.dx, ball.dy * -1)
       soundActor ! SoundActor.Pong
-    } else if (ball.x + ball.w < paddle1.x - 50 || ball.x + ball.w > paddle2.x + paddle2.w + 50) {
-      ball = initBall()
+    } else if (ball.x + ball.w < paddle1.x - 50) {
       soundActor ! SoundActor.Miss
+      ball = initBall(-1)
+      paddle2 = paddle2.scoreUp()
+    } else if (ball.x + ball.w > paddle2.x + paddle2.w + 50) {
+      soundActor ! SoundActor.Miss
+      ball = initBall(1)
+      paddle1 = paddle1.scoreUp()
     }
     ball = ball.move()
 
     //REPAINT
+    val bufferStrategy = frame.getBufferStrategy
     val g = bufferStrategy.getDrawGraphics.asInstanceOf[Graphics2D]
     if (!bufferStrategy.contentsLost) {
       g.setColor(Color.black)
@@ -139,6 +140,13 @@ class SceneActor extends Actor {
       g.fillRect(ball.x, ball.y, ball.w, ball.h)
       g.setStroke(new BasicStroke(2f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, Array(12f), 0.0f))
       g.drawLine(bounds.width / 2, 0, bounds.width / 2, bounds.height)
+
+      g.setFont(largeFont)
+      val paddle1Metrics: (Width, Height) = fontMetrics(paddle1.score.toString, largeFont)
+      g.drawString(paddle1.score.toString, bounds.width / 4 - (paddle1Metrics._1 / 2), bounds.height / 4 - paddle1Metrics._2 / 2)
+      val paddle2Metrics: (Width, Height) = fontMetrics(paddle2.score.toString, largeFont)
+      g.drawString(paddle2.score.toString, bounds.width - bounds.width / 4 - (paddle2Metrics._1 / 2), bounds.height / 4 - paddle2Metrics._2 / 2)
+
       bufferStrategy.show()
       g.dispose()
     }
@@ -160,12 +168,18 @@ class SceneActor extends Actor {
     }
   }
 
-  def initBall() = new Ball(bounds.width / 2 - Ball.width / 2, bounds.height / 2 - Ball.height / 2, randomSign(), Random.nextInt(Ball.width * 2) * randomSign())
+  def initBall(dx: Int) = new Ball(bounds.width / 2 - Ball.width / 2, bounds.height / 2 - Ball.height / 2, dx, Random.nextInt(Ball.width * 2) * randomSign())
 
   def randomSign() = Random.nextBoolean() match {
     case true => 1
     case false => -1
   }
+
+
+  type Width = Int
+  type Height = Int
+
+  def fontMetrics(text: String, font: Font): (Width, Height) = (frame.getFontMetrics(font).stringWidth(text), frame.getFontMetrics(font).getHeight)
 }
 
 
