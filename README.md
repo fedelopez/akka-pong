@@ -8,12 +8,14 @@
 
 The classic PONG game now in Scala
 
-### Player 1 
+### Keyboard controls 
 
-- **W** Move up
-- **S** Move down
+`(W)` Left paddle up
 
-### Player 2
+`(S)` Left paddle down
 
-- **O** Move up
-- **K** Move down
+`(O)` Right paddle up
+
+`(K)` Right paddle down
+
+`(ESC)` Quit
